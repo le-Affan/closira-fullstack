@@ -206,3 +206,26 @@ def escalate_enquiry(
         status=enquiry.status,
         escalation_reason=enquiry.escalation_reason,
     )
+
+
+# GET /enquiry/{id}/history
+@router.get(
+    "/{enquiry_id}/history",
+    response_model=EnquiryHistoryResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get full history of an enquiry",
+    description=(
+        "Returns the enquiry details, full message thread, "
+        "and complete status timeline."
+    ),
+)
+def get_history(
+    enquiry_id: str,
+    db: Session = Depends(get_db),
+):
+    enquiry = db.query(Enquiry).filter(Enquiry.id == enquiry_id).first()
+
+    if not enquiry:
+        raise HTTPException(status_code=404, detail="Enquiry not found")
+
+    return enquiry
