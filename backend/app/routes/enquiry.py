@@ -93,8 +93,7 @@ def create_enquiry(
     status_code=status.HTTP_201_CREATED,
     summary="Schedule a follow-up",
     description=(
-        "Schedules a follow-up for an enquiry after a given delay in minutes. "
-        "Optionally accepts a message template."
+        "Schedules a follow-up for an enquiry after a given delay in minutes and optionally accepts a message template."
     ),
 )
 def schedule_followup(
@@ -111,8 +110,7 @@ def schedule_followup(
         raise HTTPException(
             status_code=400,
             detail=(
-                "Cannot schedule a follow-up on an escalated enquiry. "
-                "Resolve the escalation first."
+                "Cannot schedule a follow-up on an escalated enquiry without resolving it first."
             ),
         )
 
@@ -215,8 +213,7 @@ def escalate_enquiry(
     status_code=status.HTTP_200_OK,
     summary="Get full history of an enquiry",
     description=(
-        "Returns the enquiry details, full message thread, "
-        "and complete status timeline."
+        "Returns the enquiry details, full message thread and complete status timeline."
     ),
 )
 def get_history(
