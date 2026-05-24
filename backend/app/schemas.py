@@ -28,18 +28,18 @@ class SenderEnum(str, Enum):
 # enquiry ----
 class EnquiryCreate(BaseModel):
     customer_name: str = Field(
-        ..., example="Sarah M.", description="Full name of the customer"
+        ..., example="Affan S.", description="Full name of the customer"
     )
     channel: ChannelEnum = Field(..., example="whatsapp", description="Inbound channel")
     message: str = Field(
         ...,
-        example="Hi, I'd like to book an appointment for next week.",
+        example="Hey, I'd like to book an appointment for next week.",
         description="Customer's message",
     )
 
 
 class EnquiryCreatedResponse(BaseModel):
-    job_id: str = Field(..., description="The enquiry ID to track processing status")
+    job_id: str = Field(..., description="Enquiry ID to track processing status")
     status: str = Field(default="processing")
     message: str = Field(default="Enquiry received. Processing in background.")
 
@@ -72,7 +72,7 @@ class FollowUpResponse(BaseModel):
 class EscalateCreate(BaseModel):
     reason: str = Field(
         ...,
-        example="Customer is very unhappy and requesting a manager.",
+        example="Customer is unhappy and is requesting a manager.",
         description="Reason for escalation",
     )
 
