@@ -148,3 +148,61 @@ def schedule_followup(
     )
 
     return followup
+
+
+# POST /enquiry/{id}/escalate
+@router.post(
+    "/{enquiry_id}/escalate",
+    response_model=EscalateResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Escalate an enquiry to a human agent",
+    description=(
+        "Marks an enquiry as escalated. Accepts a reason. "
+        "Updates status and logs the event in the timeline."
+    ),
+)
+def escalate_enquiry(
+    enquiry_id: str,
+    payload: EscalateCreate,
+    db: Session = Depends(get_db),
+):
+    enquiry = db.query(Enquiry).filter(Enquiry.id == enquiry_id).first()
+
+    if not enquiry:
+        raise HTTPException(status_code=404, detail="Enquiry not found")
+
+    if enquiry.status == "escalated":
+        raise HTTPException(
+            status_code=400,
+            detail="Enquiry is already escalated",
+        )
+
+    enquiry.status = "escalated"
+    enquiry.escalation_reason = payload.reason
+    enquiry.updated_at = datetime.utcnow()
+
+    timeline_entry = StatusTimeline(
+        enquiry_id=enquiry_id,
+        status="escalated",
+        note=f"Manually escalated: {payload.reason}",
+        timestamp=datetime.utcnow(),
+    )
+
+    db.add(timeline_entry)
+
+    db.commit()
+    db.refresh(enquiry)
+
+    logger.warning(
+        "Enquiry escalated",
+        extra={
+            "enquiry_id": enquiry_id,
+            "reason": payload.reason,
+        },
+    )
+
+    return EscalateResponse(
+        id=enquiry.id,
+        status=enquiry.status,
+        escalation_reason=enquiry.escalation_reason,
+    )
