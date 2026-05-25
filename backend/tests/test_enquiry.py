@@ -95,3 +95,26 @@ def test_create_enquiry_invalid_channel():
     )
 
     assert res.status_code == 422
+
+
+def test_get_history_returns_data():
+    res = create_sample_enquiry()
+
+    job_id = res.json()["job_id"]
+
+    history = client.get(f"/enquiry/{job_id}/history")
+
+    assert history.status_code == 200
+
+    data = history.json()
+
+    assert data["id"] == job_id
+    assert data["customer_name"] == "Test User"
+    assert "messages" in data
+    assert "timeline" in data
+
+
+def test_get_history_not_found():
+    res = client.get("/enquiry/nonexistent-id/history")
+
+    assert res.status_code == 404
