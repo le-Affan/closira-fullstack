@@ -26,7 +26,7 @@ export const STATUS_META = {
     description: "Background task is currently running SOP matching.",
   },
   sop_matched: {
-    label: "SOP Matched",
+    label: "Qualified",
     color: Colors.statusSopMatched,
     backgroundColor: Colors.statusSopMatchedBg,
     description: "A Standard Operating Procedure was matched and a response suggested.",
@@ -38,6 +38,35 @@ export const STATUS_META = {
     description: "Enquiry flagged for human agent review.",
   },
 };
+
+export function getChannelBadgeStyle(channel) {
+  switch (channel) {
+    case "whatsapp":
+      return {
+        color: Colors.channelWhatsapp,
+        backgroundColor: Colors.channelWhatsappBg,
+        label: "WhatsApp",
+      };
+    case "email":
+      return {
+        color: Colors.channelEmail,
+        backgroundColor: Colors.channelEmailBg,
+        label: "Email",
+      };
+    case "call":
+      return {
+        color: Colors.channelCall,
+        backgroundColor: Colors.channelCallBg,
+        label: "Call",
+      };
+    default:
+      return {
+        color: Colors.textSecondary,
+        backgroundColor: Colors.border,
+        label: channel ?? "Unknown",
+      };
+  }
+}
 
 /**
  * Safe lookup with a fallback for unknown statuses from the API.

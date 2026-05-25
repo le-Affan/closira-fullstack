@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import StatusBadge from './StatusBadge';
-import { getChannelLabel, formatDateTime } from '../constants/status';
+import { getChannelBadgeStyle, formatDateTime } from '../constants/status';
 
 export default function EnquiryCard({ enquiry, onPress }) {
   const { customer_name, channel, status, messages, created_at, sop_match } = enquiry;
@@ -10,6 +10,8 @@ export default function EnquiryCard({ enquiry, onPress }) {
     ? messages[0].content 
     : 'No messages recorded';
 
+  const chStyle = getChannelBadgeStyle(channel);
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -17,12 +19,23 @@ export default function EnquiryCard({ enquiry, onPress }) {
       className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm mb-2 flex-col"
     >
       <View className="flex-row justify-between items-center mb-1.5">
-        <View className="flex-row items-center flex-1 pr-2">
+        <View className="flex-row items-center flex-1 pr-2 flex-wrap">
           <Text className="text-sm font-bold text-slate-900 leading-tight mr-2">
             {customer_name}
           </Text>
+          <View
+            style={{ backgroundColor: chStyle.backgroundColor }}
+            className="px-1.5 py-0.5 rounded mr-2"
+          >
+            <Text
+              style={{ color: chStyle.color }}
+              className="text-[8px] font-bold uppercase tracking-wider"
+            >
+              {chStyle.label}
+            </Text>
+          </View>
           <Text className="text-[10px] text-slate-400">
-            {getChannelLabel(channel)} · {formatDateTime(created_at)}
+            {formatDateTime(created_at)}
           </Text>
         </View>
         <StatusBadge status={status} />

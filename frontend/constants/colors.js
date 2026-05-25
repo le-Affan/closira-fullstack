@@ -16,17 +16,25 @@ export const Colors = {
   textMuted: "#94A3B8",    // slate-400
 
   // Brand accent (placeholder — refine when branding lands)
-  accent: "#0EA5E9",       // sky-500
+  accent: "#0EA5E9",       // sky-505
   accentMuted: "#E0F2FE",  // sky-100
 
+  // Channel-specific colors
+  channelWhatsapp: "#22C55E", // WhatsApp green
+  channelWhatsappBg: "#DCFCE7",
+  channelEmail: "#3B82F6",    // Email blue
+  channelEmailBg: "#DBEAFE",
+  channelCall: "#F59E0B",     // Call amber
+  channelCallBg: "#FEF3C7",
+
   // Status-specific (mirrors STATUS_META below)
-  statusNew: "#6366F1",        // indigo-500
+  statusNew: "#3B82F6",        // New blue
   statusProcessing: "#F59E0B", // amber-500
-  statusSopMatched: "#10B981", // emerald-500
-  statusEscalated: "#EF4444",  // red-500
+  statusSopMatched: "#10B981", // Qualified green
+  statusEscalated: "#EF4444",  // Escalated red
 
   // Status backgrounds (light tints for badges)
-  statusNewBg: "#EEF2FF",      // indigo-50
+  statusNewBg: "#EFF6FF",      // blue-50
   statusProcessingBg: "#FFFBEB",
   statusSopMatchedBg: "#ECFDF5",
   statusEscalatedBg: "#FEF2F2",

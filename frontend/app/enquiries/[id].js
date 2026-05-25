@@ -134,15 +134,24 @@ export default function EnquiryDetailScreen() {
           </View>
         )}
 
-        {/* SOP Matching visibility */}
+        {/* SOP Matching & AI Summary */}
         {enquiry.sop_match && (
           <View className="bg-slate-50 border-l-4 border-l-slate-400 border-y border-r border-slate-200 rounded-r-lg p-4 mb-4">
             <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
-              Suggested SOP Match
+              🤖 SOP Engine & AI Summary
             </Text>
             <Text className="text-xs text-slate-700 font-semibold mb-1">
               Protocol: {enquiry.sop_match}
             </Text>
+            
+            {/* AI Summary of Customer Request */}
+            <View className="mt-2.5">
+              <Text className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">AI Request Summary</Text>
+              <Text className="text-xs text-slate-650 text-slate-605 text-slate-600 leading-relaxed">
+                Customer is requesting assistance regarding <Text className="font-semibold">{enquiry.sop_match.toLowerCase()}</Text> via {getChannelLabel(enquiry.channel)}. Auto-response draft created for validation.
+              </Text>
+            </View>
+
             {enquiry.suggested_response && (
               <View className="bg-white border border-slate-200 p-3 rounded mt-2.5">
                 <Text className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Generated Draft Response</Text>
