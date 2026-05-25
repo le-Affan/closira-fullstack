@@ -48,7 +48,7 @@ export default function LeadsScreen() {
         <FlatList
           data={leads}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: 12, paddingBottom: 40 }}
+          contentContainerStyle={{ padding: 12, paddingBottom: 40, flexGrow: 1 }}
           ListEmptyComponent={<EmptyState message="No active leads in pipeline" />}
           renderItem={({ item }) => (
             <EnquiryCard

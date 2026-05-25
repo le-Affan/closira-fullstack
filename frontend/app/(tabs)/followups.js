@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FlatList, Text, View, ActivityIndicator, TouchableOpacity, Alert } from "react-native";
+import { FlatList, Text, View, ActivityIndicator, TouchableOpacity } from "react-native";
 import { useRouter, Stack } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
@@ -19,13 +19,8 @@ export default function FollowUpsScreen() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleMarkDone = (id, customerName) => {
+  const handleMarkDone = (id) => {
     setCompletedTaskIds((prev) => [...prev, id]);
-    Alert.alert(
-      "Task Completed",
-      `Follow-up task for ${customerName} marked as completed.`,
-      [{ text: "OK" }]
-    );
   };
 
   if (loading) {
@@ -37,21 +32,25 @@ export default function FollowUpsScreen() {
     );
   }
 
-  // Derive follow-ups from SOP matched (Qualified) leads that are not completed yet
+  // Derive follow-ups from SOP matched (Qualified) leads
   const followUpTasks = enquiries
-    .filter((e) => e.status === "sop_matched" && !completedTaskIds.includes(e.id))
+    .filter((e) => e.status === "sop_matched")
     .map((e) => {
-      // Calculate a mock due time (e.g. 2 hours after creation)
       const creationTime = new Date(e.created_at).getTime();
       const dueTime = new Date(creationTime + 2 * 60 * 60 * 1000).toISOString();
+      const isDone = completedTaskIds.includes(e.id);
       return {
         id: e.id,
         customer_name: e.customer_name,
         channel: e.channel,
         due_time: dueTime,
         message_preview: e.suggested_response || "Waiting for draft template response...",
+        isDone,
       };
     });
+
+  // Count active (uncompleted) follow-ups
+  const activeFollowUps = followUpTasks.filter((t) => !t.isDone);
 
   return (
     <View className="flex-1 bg-slate-50 items-center justify-start w-full">
@@ -72,15 +71,19 @@ export default function FollowUpsScreen() {
         <FlatList
           data={followUpTasks}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: 12, paddingBottom: 40 }}
+          contentContainerStyle={{ padding: 12, paddingBottom: 40, flexGrow: 1 }}
           ListEmptyComponent={<EmptyState message="All follow-up tasks completed" />}
           renderItem={({ item }) => {
             const chStyle = getChannelBadgeStyle(item.channel);
             return (
-              <View className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm mb-3 flex-col">
+              <View 
+                className={`bg-white p-3 rounded-lg border border-slate-200 shadow-sm mb-3 flex-col ${
+                  item.isDone ? "opacity-60 bg-slate-50/50" : ""
+                }`}
+              >
                 <View className="flex-row justify-between items-center mb-2">
                   <View className="flex-row items-center flex-1 pr-2 flex-wrap">
-                    <Text className="text-sm font-bold text-slate-900 mr-2">
+                    <Text className={`text-sm font-bold text-slate-900 mr-2 ${item.isDone ? "line-through text-slate-400" : ""}`}>
                       {item.customer_name}
                     </Text>
                     <View
@@ -98,8 +101,13 @@ export default function FollowUpsScreen() {
                   
                   {/* Due Time Indicator */}
                   <View className="flex-row items-center">
-                    <Ionicons name="time-outline" size={11} color="#D97706" className="mr-1" />
-                    <Text className="text-[10px] text-amber-600 font-semibold">
+                    <Ionicons 
+                      name="time-outline" 
+                      size={11} 
+                      color={item.isDone ? "#94A3B8" : "#D97706"} 
+                      className="mr-1" 
+                    />
+                    <Text className={`text-[10px] font-semibold ${item.isDone ? "text-slate-400" : "text-amber-600"}`}>
                       Due: {formatDateTime(item.due_time)}
                     </Text>
                   </View>
@@ -127,16 +135,25 @@ export default function FollowUpsScreen() {
                     </Text>
                   </TouchableOpacity>
                   
-                  <TouchableOpacity
-                    onPress={() => handleMarkDone(item.id, item.customer_name)}
-                    activeOpacity={0.7}
-                    className="bg-emerald-600 px-3 py-1.5 rounded-md flex-row items-center"
-                  >
-                    <Ionicons name="checkmark-done" size={12} color="#FFFFFF" className="mr-1" />
-                    <Text className="text-[10px] font-bold text-white uppercase tracking-wider">
-                      Mark Done
-                    </Text>
-                  </TouchableOpacity>
+                  {item.isDone ? (
+                    <View className="flex-row items-center px-3 py-1.5">
+                      <Ionicons name="checkmark-done-circle" size={14} color="#10B981" className="mr-1" />
+                      <Text className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">
+                        Completed
+                      </Text>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      onPress={() => handleMarkDone(item.id)}
+                      activeOpacity={0.7}
+                      className="bg-emerald-600 px-3 py-1.5 rounded-md flex-row items-center"
+                    >
+                      <Ionicons name="checkmark-done" size={12} color="#FFFFFF" className="mr-1" />
+                      <Text className="text-[10px] font-bold text-white uppercase tracking-wider">
+                        Mark Done
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
             );

@@ -97,9 +97,6 @@ export default function EnquiryDetailScreen() {
               <Text className="text-base font-bold text-slate-900 leading-snug">
                 {enquiry.customer_name}
               </Text>
-              <Text className="text-[10px] text-slate-400 mt-1">
-                ID: {enquiry.id}
-              </Text>
             </View>
             <StatusBadge status={enquiry.status} />
           </View>

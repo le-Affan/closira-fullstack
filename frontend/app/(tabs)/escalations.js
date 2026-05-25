@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FlatList, Text, View, ActivityIndicator, TouchableOpacity, Alert } from "react-native";
+import { FlatList, Text, View, ActivityIndicator, TouchableOpacity } from "react-native";
 import { useRouter, Stack } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
@@ -18,17 +18,12 @@ export default function EscalationsScreen() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleResolveEscalation = (id, customerName) => {
-    // Optimistically update status to "sop_matched" (Qualified) in local state
+  const handleResolveEscalation = (id) => {
+    // Optimistically update status to "sop_matched" (Qualified) in local state silently
     setEnquiries((prev) =>
       prev.map((e) =>
         e.id === id ? { ...e, status: "sop_matched", escalation_reason: null } : e
       )
-    );
-    Alert.alert(
-      "Escalation Resolved",
-      `Ticket for ${customerName} resolved and reassigned back to qualified leads.`,
-      [{ text: "OK" }]
     );
   };
 
@@ -63,7 +58,7 @@ export default function EscalationsScreen() {
         <FlatList
           data={escalations}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: 12, paddingBottom: 40 }}
+          contentContainerStyle={{ padding: 12, paddingBottom: 40, flexGrow: 1 }}
           ListEmptyComponent={<EmptyState message="No pending escalations found" />}
           renderItem={({ item }) => {
             const chStyle = getChannelBadgeStyle(item.channel);
@@ -120,7 +115,7 @@ export default function EscalationsScreen() {
                     Tap card to view full thread
                   </Text>
                   <TouchableOpacity
-                    onPress={() => handleResolveEscalation(item.id, item.customer_name)}
+                    onPress={() => handleResolveEscalation(item.id)}
                     activeOpacity={0.7}
                     className="bg-slate-800 px-3 py-1.5 rounded-md flex-row items-center"
                   >
