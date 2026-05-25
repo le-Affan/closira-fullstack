@@ -13,18 +13,14 @@ export default function TabsLayout() {
           backgroundColor: "#FFFFFF",
           borderTopWidth: 1,
           borderTopColor: "#E2E8F0",
-          height: 68,
-          paddingBottom: 10,
-          paddingTop: 8,
-        },
-        tabBarItemStyle: {
-          justifyContent: "center",
-          alignItems: "center",
+          height: 64,
+          paddingTop: 6,
+          paddingBottom: 6,
         },
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: "bold",
-          marginBottom: 2,
+          marginTop: 2,
         },
       }}
     >
