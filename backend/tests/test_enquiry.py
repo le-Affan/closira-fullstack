@@ -58,3 +58,40 @@ def test_health_check():
 
     assert data["status"] == "ok"
     assert data["database"] == "connected"
+
+
+def test_create_enquiry_returns_job_id():
+    res = create_sample_enquiry()
+
+    assert res.status_code == 202
+
+    data = res.json()
+
+    assert "job_id" in data
+    assert data["status"] == "processing"
+
+
+def test_create_enquiry_missing_field():
+    res = client.post(
+        "/enquiry/",
+        json={
+            "customer_name": "Test User",
+            "channel": "whatsapp",
+            # message missing
+        },
+    )
+
+    assert res.status_code == 422
+
+
+def test_create_enquiry_invalid_channel():
+    res = client.post(
+        "/enquiry/",
+        json={
+            "customer_name": "Test User",
+            "channel": "telegram",  # not a valid channel
+            "message": "Hello",
+        },
+    )
+
+    assert res.status_code == 422
