@@ -72,7 +72,7 @@ def create_enquiry(
     db.commit()
 
     # Fire background task
-    background_tasks.add_task(process_enquiry, enquiry.id, db)
+    background_tasks.add_task(process_enquiry, enquiry.id)
 
     logger.info(
         "Enquiry created",

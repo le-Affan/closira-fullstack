@@ -68,7 +68,9 @@ def test_create_enquiry_returns_job_id():
     data = res.json()
 
     assert "job_id" in data
-    assert data["status"] == "processing"
+    # The route returns immediately with status="queued"; the background task
+    # runs after the response and updates the status to processing/sop_matched.
+    assert data["status"] == "queued"
 
 
 def test_create_enquiry_missing_field():
@@ -112,6 +114,24 @@ def test_get_history_returns_data():
     assert data["customer_name"] == "Test User"
     assert "messages" in data
     assert "timeline" in data
+
+
+def test_history_contains_customer_message():
+    """Regression test: customer's original message must appear in history messages."""
+    res = create_sample_enquiry("I'd like to book an appointment")
+    job_id = res.json()["job_id"]
+
+    history = client.get(f"/enquiry/{job_id}/history")
+    assert history.status_code == 200
+
+    messages = history.json()["messages"]
+    assert len(messages) >= 1, "Expected at least the customer message"
+
+    senders = [m["sender"] for m in messages]
+    assert "customer" in senders, "Customer's original message must appear in history"
+
+    customer_msg = next(m for m in messages if m["sender"] == "customer")
+    assert "book" in customer_msg["content"].lower()
 
 
 def test_get_history_not_found():
