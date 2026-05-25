@@ -43,7 +43,7 @@ def create_enquiry(
         customer_name=payload.customer_name,
         channel=payload.channel.value,
         message=payload.message,
-        status="new",
+        status="queued",
     )
 
     db.add(enquiry)
@@ -63,12 +63,13 @@ def create_enquiry(
     # Add initial timeline entry
     timeline_entry = StatusTimeline(
         enquiry_id=enquiry.id,
-        status="new",
+        status="queued",
         note="Enquiry received",
         timestamp=datetime.utcnow(),
     )
 
     db.add(timeline_entry)
+    db.commit()
 
     # Fire background task
     background_tasks.add_task(process_enquiry, enquiry.id, db)

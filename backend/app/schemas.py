@@ -39,7 +39,10 @@ class EnquiryCreate(BaseModel):
 
 
 class EnquiryCreatedResponse(BaseModel):
-    job_id: str = Field(..., description="Enquiry ID to track processing status")
+    job_id: str = Field(
+        example="a7332816-ba04-4fee-82f5-bb228200df44",
+        description="Enquiry ID to track processing status",
+    )
     status: str = Field(default="processing")
     message: str = Field(default="Enquiry received. Processing in background.")
 
