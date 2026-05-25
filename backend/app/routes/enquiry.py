@@ -47,6 +47,8 @@ def create_enquiry(
     )
 
     db.add(enquiry)
+    db.commit()
+    db.refresh(enquiry)
 
     # Store the original customer message
     customer_message = Message(
@@ -67,9 +69,6 @@ def create_enquiry(
     )
 
     db.add(timeline_entry)
-
-    db.commit()
-    db.refresh(enquiry)
 
     # Fire background task
     background_tasks.add_task(process_enquiry, enquiry.id, db)
