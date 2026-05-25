@@ -8,6 +8,8 @@ Closira is an AI-powered agentic customer support dashboard and automation tool 
 closira-fullstack/
 ├── backend/    # FastAPI REST API
 ├── frontend/   # React Native mobile app
+├── README.md
+├── api_tests.sh  # API Testing script
 ```
 
 ## Quick Links
