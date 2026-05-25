@@ -109,9 +109,7 @@ def schedule_followup(
     if enquiry.status == "escalated":
         raise HTTPException(
             status_code=400,
-            detail=(
-                "Cannot schedule a follow-up on an escalated enquiry without resolving it first."
-            ),
+            detail="Follow-up cannot be scheduled: enquiry is currently escalated.",
         )
 
     scheduled_at = datetime.utcnow() + timedelta(minutes=payload.delay_minutes)
@@ -141,6 +139,7 @@ def schedule_followup(
         "Follow-up scheduled",
         extra={
             "enquiry_id": enquiry_id,
+            "delay_minutes": payload.delay_minutes,
             "scheduled_at": scheduled_at.isoformat(),
         },
     )
@@ -175,6 +174,8 @@ def escalate_enquiry(
             detail="Enquiry is already escalated",
         )
 
+    prior_status = enquiry.status
+
     enquiry.status = "escalated"
     enquiry.escalation_reason = payload.reason
     enquiry.updated_at = datetime.utcnow()
@@ -196,6 +197,7 @@ def escalate_enquiry(
         extra={
             "enquiry_id": enquiry_id,
             "reason": payload.reason,
+            "prior_status": prior_status,
         },
     )
 
@@ -225,4 +227,30 @@ def get_history(
     if not enquiry:
         raise HTTPException(status_code=404, detail="Enquiry not found")
 
-    return enquiry
+    # Fetch relationships with explicit chronological ordering rather than
+    # relying on insertion order, which is non-deterministic across DB engines.
+    messages = (
+        db.query(Message)
+        .filter(Message.enquiry_id == enquiry_id)
+        .order_by(Message.timestamp.asc())
+        .all()
+    )
+    timeline = (
+        db.query(StatusTimeline)
+        .filter(StatusTimeline.enquiry_id == enquiry_id)
+        .order_by(StatusTimeline.timestamp.asc())
+        .all()
+    )
+
+    return EnquiryHistoryResponse(
+        id=enquiry.id,
+        customer_name=enquiry.customer_name,
+        channel=enquiry.channel,
+        status=enquiry.status,
+        sop_match=enquiry.sop_match,
+        suggested_response=enquiry.suggested_response,
+        escalation_reason=enquiry.escalation_reason,
+        created_at=enquiry.created_at,
+        messages=messages,
+        timeline=timeline,
+    )

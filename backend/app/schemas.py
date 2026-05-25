@@ -64,8 +64,9 @@ class FollowUpCreate(BaseModel):
     delay_minutes: int = Field(
         ...,
         ge=1,
+        le=10080,  # 7 days max — anything beyond is almost certainly a client error
         example=30,
-        description="Minutes from now to schedule the follow-up",
+        description="Minutes from now to schedule the follow-up (1 – 10 080)",
     )
     message_template: Optional[str] = Field(
         None,

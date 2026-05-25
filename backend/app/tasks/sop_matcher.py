@@ -164,7 +164,11 @@ def process_enquiry(enquiry_id: str):
             )
 
             logger.warning(
-                "No SOP matched — auto-escalated", extra={"enquiry_id": enquiry_id}
+                "No SOP matched — auto-escalated",
+                extra={
+                    "enquiry_id": enquiry_id,
+                    "escalation_reason": enquiry.escalation_reason,
+                },
             )
 
             _add_message(
