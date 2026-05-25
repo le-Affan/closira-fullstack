@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView, Text, View, ActivityIndicator, TouchableOpacity, Alert } from "react-native";
+import { ScrollView, Text, View, ActivityIndicator, TouchableOpacity } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { fetchEnquiries } from "../../services/api";
-import { formatDateTime } from "../../constants/status";
+import { getChannelBadgeStyle, formatDateTime } from "../../constants/status";
 import SectionHeader from "../../components/SectionHeader";
 
 export default function DashboardScreen() {
@@ -33,8 +33,9 @@ export default function DashboardScreen() {
   // Calculate statistics
   const totalLeads = enquiries.filter(e => e.status !== "escalated").length;
   const totalEscalations = enquiries.filter(e => e.status === "escalated").length;
-  // Followups derived from Qualified status
   const totalFollowups = enquiries.filter(e => e.status === "sop_matched").length;
+  // Deriving Missed count dynamically from call channels
+  const totalMissed = enquiries.filter(e => e.channel === "call").length;
 
   // Compile recent activity log feed from all timelines
   const activityLog = [];
@@ -44,6 +45,7 @@ export default function DashboardScreen() {
         activityLog.push({
           ...item,
           customer_name: e.customer_name,
+          channel: e.channel,
           enquiry_id: e.id,
         });
       });
@@ -53,23 +55,71 @@ export default function DashboardScreen() {
   // Sort activities chronologically descending (newest first)
   const sortedActivities = activityLog
     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-    .slice(0, 10); // show top 10 activities
+    .slice(0, 8); // show top 8 activities
 
   const handleSimulateLead = () => {
-    // Simulate adding an inbound lead by modifying API local list or prompting action
-    Alert.alert(
-      "Simulate Inbound Lead",
-      "A new WhatsApp enquiry has been simulated. Check the Leads tab.",
-      [{ text: "OK" }]
-    );
+    const newLead = {
+      id: `simulated-${Date.now()}`,
+      customer_name: "Simulated Client",
+      channel: "whatsapp",
+      status: "new",
+      created_at: new Date().toISOString(),
+      messages: [
+        {
+          id: `sim-msg-${Date.now()}`,
+          sender: "customer",
+          content: "Hello! This is a simulated inbound WhatsApp lead request.",
+          timestamp: new Date().toISOString(),
+        }
+      ],
+      timeline: [
+        {
+          status: "new",
+          note: "Simulated lead created",
+          timestamp: new Date().toISOString(),
+        }
+      ]
+    };
+    // Import dynamically to avoid loading issues and prepend to shared mock array
+    import("../../mocks/enquiries").then(({ MOCK_ENQUIRIES }) => {
+      MOCK_ENQUIRIES.unshift(newLead);
+      setTriggerCount(prev => prev + 1);
+    });
   };
 
   const handleSimulateEscalation = () => {
-    Alert.alert(
-      "Simulate Escalation",
-      "Simulated manual escalation of high-urgency contract issue. Check the Escalations tab.",
-      [{ text: "OK" }]
-    );
+    const newEsc = {
+      id: `simulated-esc-${Date.now()}`,
+      customer_name: "Simulated Urgent Case",
+      channel: "email",
+      status: "escalated",
+      escalation_reason: "Billing Dispute: Double charged on subscription fee.",
+      created_at: new Date().toISOString(),
+      messages: [
+        {
+          id: `sim-msg-esc-${Date.now()}`,
+          sender: "customer",
+          content: "URGENT: I was double charged and need immediate resolution.",
+          timestamp: new Date().toISOString(),
+        }
+      ],
+      timeline: [
+        {
+          status: "queued",
+          note: "Enquiry received",
+          timestamp: new Date().toISOString(),
+        },
+        {
+          status: "escalated",
+          note: "Auto-escalated: Billing issue detected",
+          timestamp: new Date().toISOString(),
+        }
+      ]
+    };
+    import("../../mocks/enquiries").then(({ MOCK_ENQUIRIES }) => {
+      MOCK_ENQUIRIES.unshift(newEsc);
+      setTriggerCount(prev => prev + 1);
+    });
   };
 
   return (
@@ -81,7 +131,7 @@ export default function DashboardScreen() {
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
       >
         {/* Header */}
-        <View className="mb-6">
+        <View className="mb-5">
           <Text className="text-lg font-bold text-slate-900 tracking-tight">
             Closira Control Center
           </Text>
@@ -90,33 +140,42 @@ export default function DashboardScreen() {
           </Text>
         </View>
 
-        {/* Stats Grid */}
-        <View className="flex-row justify-between mb-6">
-          <View className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex-1 mr-2 flex-col justify-between">
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Leads</Text>
-              <Ionicons name="funnel-outline" size={14} color="#64748B" />
+        {/* Stats Grid - Responsive 2x2 on mobile, 4x1 on desktop */}
+        <View className="flex-row flex-wrap -mx-1 mb-4">
+          <View className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 min-w-[120px] flex-1 m-1 flex-col justify-between">
+            <View className="flex-row items-center justify-between mb-1.5">
+              <Text className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Leads</Text>
+              <Ionicons name="funnel-outline" size={13} color="#64748B" />
             </View>
-            <Text className="text-xl font-bold text-slate-800">{totalLeads}</Text>
-            <Text className="text-[9px] text-slate-400 mt-1">Active pipelines</Text>
+            <Text className="text-base font-bold text-slate-800">{totalLeads}</Text>
+            <Text className="text-[8px] text-slate-400 mt-0.5">Active</Text>
           </View>
 
-          <View className="bg-rose-50/50 border border-rose-100 rounded-lg p-3 flex-1 mx-1 flex-col justify-between">
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-[10px] font-bold text-rose-500 uppercase tracking-wider">Escalated</Text>
-              <Ionicons name="warning-outline" size={14} color="#EF4444" />
+          <View className="bg-rose-50/50 border border-rose-100 rounded-lg p-2.5 min-w-[120px] flex-1 m-1 flex-col justify-between">
+            <View className="flex-row items-center justify-between mb-1.5">
+              <Text className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">Escalated</Text>
+              <Ionicons name="warning-outline" size={13} color="#EF4444" />
             </View>
-            <Text className="text-xl font-bold text-rose-700">{totalEscalations}</Text>
-            <Text className="text-[9px] text-rose-500 mt-1">Needs review</Text>
+            <Text className="text-base font-bold text-rose-700">{totalEscalations}</Text>
+            <Text className="text-[8px] text-rose-500 mt-0.5">Urgent</Text>
           </View>
 
-          <View className="bg-amber-50/50 border border-amber-100 rounded-lg p-3 flex-1 ml-2 flex-col justify-between">
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Follow-ups</Text>
-              <Ionicons name="alarm-outline" size={14} color="#D97706" />
+          <View className="bg-amber-50/50 border border-amber-100 rounded-lg p-2.5 min-w-[120px] flex-1 m-1 flex-col justify-between">
+            <View className="flex-row items-center justify-between mb-1.5">
+              <Text className="text-[9px] font-bold text-amber-600 uppercase tracking-wider">Follow-ups</Text>
+              <Ionicons name="alarm-outline" size={13} color="#D97706" />
             </View>
-            <Text className="text-xl font-bold text-amber-700">{totalFollowups}</Text>
-            <Text className="text-[9px] text-amber-500 mt-1">Action items</Text>
+            <Text className="text-base font-bold text-amber-700">{totalFollowups}</Text>
+            <Text className="text-[8px] text-amber-500 mt-0.5">Actionable</Text>
+          </View>
+
+          <View className="bg-slate-100 border border-slate-200 rounded-lg p-2.5 min-w-[120px] flex-1 m-1 flex-col justify-between">
+            <View className="flex-row items-center justify-between mb-1.5">
+              <Text className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Missed</Text>
+              <Ionicons name="close-circle-outline" size={13} color="#475569" />
+            </View>
+            <Text className="text-base font-bold text-slate-800">{totalMissed}</Text>
+            <Text className="text-[8px] text-slate-500 mt-0.5">Callbacks</Text>
           </View>
         </View>
 
@@ -146,26 +205,50 @@ export default function DashboardScreen() {
         <SectionHeader title="System Activity Feed" />
         <View className="bg-slate-50 border border-slate-200 rounded-lg p-3">
           {sortedActivities.length > 0 ? (
-            sortedActivities.map((act, index) => (
-              <View 
-                key={index} 
-                className={`py-2 flex-col justify-start ${
-                  index === sortedActivities.length - 1 ? "" : "border-b border-slate-150"
-                }`}
-              >
-                <View className="flex-row justify-between items-center mb-1">
-                  <Text className="text-xs font-bold text-slate-800 leading-tight">
-                    {act.customer_name}
-                  </Text>
-                  <Text className="text-[9px] text-slate-400">
-                    {formatDateTime(act.timestamp)}
+            sortedActivities.map((act, index) => {
+              const chStyle = getChannelBadgeStyle(act.channel);
+              return (
+                <View 
+                  key={index} 
+                  className={`py-2 flex-col justify-start ${
+                    index === sortedActivities.length - 1 ? "" : "border-b border-slate-200"
+                  }`}
+                >
+                  <View className="flex-row justify-between items-center mb-1 flex-wrap">
+                    <View className="flex-row items-center flex-wrap">
+                      <Text className="text-xs font-bold text-slate-800 mr-2 leading-tight">
+                        {act.customer_name}
+                      </Text>
+                      
+                      {act.channel && (
+                        <View
+                          style={{ backgroundColor: chStyle.backgroundColor }}
+                          className="px-1.5 py-0.5 rounded mr-2"
+                        >
+                          <Text
+                            style={{ color: chStyle.color }}
+                            className="text-[8px] font-bold uppercase tracking-wider"
+                          >
+                            {chStyle.label}
+                          </Text>
+                        </View>
+                      )}
+
+                      <Text className="text-[10px] text-slate-500 font-semibold">
+                        ({act.status})
+                      </Text>
+                    </View>
+
+                    <Text className="text-[9px] text-slate-400">
+                      {formatDateTime(act.timestamp)}
+                    </Text>
+                  </View>
+                  <Text className="text-xs text-slate-500 leading-relaxed font-normal">
+                    Event: {act.note}
                   </Text>
                 </View>
-                <Text className="text-xs text-slate-500 leading-relaxed font-normal">
-                  Status changed to <Text className="font-semibold">{act.status}</Text> ({act.note})
-                </Text>
-              </View>
-            ))
+              );
+            })
           ) : (
             <Text className="text-xs text-slate-400 italic text-center py-4">
               No recent log activities
