@@ -46,3 +46,15 @@ def create_sample_enquiry(message="I'd like to book an appointment"):
             "message": message,
         },
     )
+
+
+# Health
+def test_health_check():
+    res = client.get("/health")
+
+    assert res.status_code == 200
+
+    data = res.json()
+
+    assert data["status"] == "ok"
+    assert data["database"] == "connected"
