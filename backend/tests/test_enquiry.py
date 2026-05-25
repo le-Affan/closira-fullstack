@@ -148,3 +148,50 @@ def test_followup_not_found():
     )
 
     assert res.status_code == 404
+
+
+def test_escalate_enquiry():
+    res = create_sample_enquiry()
+
+    job_id = res.json()["job_id"]
+
+    escalate = client.post(
+        f"/enquiry/{job_id}/escalate",
+        json={
+            "reason": "Customer is requesting a manager.",
+        },
+    )
+
+    assert escalate.status_code == 200
+
+    data = escalate.json()
+
+    assert data["status"] == "escalated"
+    assert "manager" in data["escalation_reason"]
+
+
+def test_escalate_already_escalated():
+    res = create_sample_enquiry()
+
+    job_id = res.json()["job_id"]
+
+    client.post(
+        f"/enquiry/{job_id}/escalate",
+        json={"reason": "First escalation"},
+    )
+
+    second = client.post(
+        f"/enquiry/{job_id}/escalate",
+        json={"reason": "Second attempt"},
+    )
+
+    assert second.status_code == 400
+
+
+def test_escalate_not_found():
+    res = client.post(
+        "/enquiry/bad-id/escalate",
+        json={"reason": "test"},
+    )
+
+    assert res.status_code == 404
