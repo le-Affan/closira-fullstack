@@ -113,6 +113,7 @@ Covers health check, enquiry creation, validation errors, follow-up scheduling, 
 - Follow-ups are stored but not dispatched as there's no scheduler running. That would need APScheduler or a Celery beat worker
 - SQLite won't handle concurrent writes at scale. I felt that is acceptable here but definitely not in production
 - Background tasks don't survive restarts. Acknowledged Celery trade-off above
+- No Docker setup. I would add a Dockerfile and docker-compose for easier onboarding in production
 ```
 
 Built by Affan — [github.com/le-Affan](https://github.com/le-Affan)
