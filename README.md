@@ -18,6 +18,8 @@ closira-fullstack/
 - **Frontend Developer Guide**: See [frontend/README.md](./frontend/README.md)
 
 ---
+**Walkthrough Video**: https://youtu.be/HjSSOjqxmSA
+---
 
 **Submission Note**: Both backend and frontend assignments are complete, stable, and ready for review.
 
