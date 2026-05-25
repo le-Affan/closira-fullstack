@@ -32,51 +32,54 @@ export default function EnquiriesDashboardScreen() {
   ).length;
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-slate-50 items-center justify-start w-full">
       <Stack.Screen options={{ headerShown: false, title: "Operations Console" }} />
-      {/* Operations Header */}
-      <View className="bg-white border-b border-slate-200 px-4 pt-8 pb-4">
-        <Text className="text-xl font-bold text-slate-900 tracking-tight">
-          Closira Operations
-        </Text>
-        <Text className="text-xs text-slate-500 mt-1">
-          Support Agents & Automation Console
-        </Text>
+      
+      <View className="w-full max-w-3xl flex-1 bg-white border-x border-slate-200 shadow-sm">
+        {/* Operations Header */}
+        <View className="bg-white border-b border-slate-200 px-4 pt-6 pb-4">
+          <Text className="text-lg font-bold text-slate-900 tracking-tight">
+            Closira Operations
+          </Text>
+          <Text className="text-xs text-slate-500 mt-0.5">
+            Support Agents & Automation Console
+          </Text>
 
-        {/* Operational Indicators */}
-        <View className="flex-row mt-4">
-          <View className="bg-slate-50 border border-slate-200 px-3 py-2 rounded-md mr-3">
-            <Text className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-              Total Inbox
-            </Text>
-            <Text className="text-lg font-bold text-slate-800 mt-0.5">
-              {enquiries.length}
-            </Text>
-          </View>
-          <View className="bg-amber-50/70 border border-amber-100 px-3 py-2 rounded-md">
-            <Text className="text-[9px] font-bold text-amber-600 uppercase tracking-widest">
-              Pending Review
-            </Text>
-            <Text className="text-lg font-bold text-amber-800 mt-0.5">
-              {activeCount}
-            </Text>
+          {/* Operational Indicators */}
+          <View className="flex-row mt-3">
+            <View className="bg-slate-50 border border-slate-200 px-2.5 py-1 rounded mr-3 flex-row items-center">
+              <Text className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mr-1.5">
+                Total Inbox
+              </Text>
+              <Text className="text-xs font-bold text-slate-800">
+                {enquiries.length}
+              </Text>
+            </View>
+            <View className="bg-amber-50/70 border border-amber-100 px-2.5 py-1 rounded flex-row items-center">
+              <Text className="text-[9px] font-bold text-amber-600 uppercase tracking-widest mr-1.5">
+                Pending Review
+              </Text>
+              <Text className="text-xs font-bold text-amber-800">
+                {activeCount}
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
 
-      {/* Tickets List */}
-      <FlatList
-        data={enquiries}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
-        ListEmptyComponent={<EmptyState />}
-        renderItem={({ item }) => (
-          <EnquiryCard
-            enquiry={item}
-            onPress={() => router.push(`/enquiries/${item.id}`)}
-          />
-        )}
-      />
+        {/* Tickets List */}
+        <FlatList
+          data={enquiries}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ padding: 12, paddingBottom: 40 }}
+          ListEmptyComponent={<EmptyState />}
+          renderItem={({ item }) => (
+            <EnquiryCard
+              enquiry={item}
+              onPress={() => router.push(`/enquiries/${item.id}`)}
+            />
+          )}
+        />
+      </View>
     </View>
   );
 }
