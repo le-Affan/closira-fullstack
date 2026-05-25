@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback } from "react";
 import { FlatList, Text, View, ActivityIndicator } from "react-native";
-import { useRouter, Stack } from "expo-router";
+import { useRouter, Stack, useFocusEffect } from "expo-router";
 
 import { fetchEnquiries } from "../../services/api";
 import EnquiryCard from "../../components/EnquiryCard";
@@ -11,11 +11,13 @@ export default function LeadsScreen() {
   const [enquiries, setEnquiries] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchEnquiries()
-      .then(setEnquiries)
-      .finally(() => setLoading(false));
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchEnquiries()
+        .then(setEnquiries)
+        .finally(() => setLoading(false));
+    }, [])
+  );
 
   if (loading) {
     return (

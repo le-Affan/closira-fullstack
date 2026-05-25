@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback } from "react";
 import { FlatList, Text, View, ActivityIndicator, TouchableOpacity } from "react-native";
-import { useRouter, Stack } from "expo-router";
+import { useRouter, Stack, useFocusEffect } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
-import { fetchEnquiries } from "../../services/api";
+import { fetchEnquiries, updateMockEnquiry } from "../../services/api";
 import { getChannelBadgeStyle, formatDateTime } from "../../constants/status";
 import EmptyState from "../../components/EmptyState";
 
@@ -12,19 +12,19 @@ export default function EscalationsScreen() {
   const [enquiries, setEnquiries] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchEnquiries()
-      .then(setEnquiries)
-      .finally(() => setLoading(false));
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchEnquiries()
+        .then(setEnquiries)
+        .finally(() => setLoading(false));
+    }, [])
+  );
 
   const handleResolveEscalation = (id) => {
-    // Optimistically update status to "sop_matched" (Qualified) in local state silently
-    setEnquiries((prev) =>
-      prev.map((e) =>
-        e.id === id ? { ...e, status: "sop_matched", escalation_reason: null } : e
-      )
-    );
+    // Resolve globally and refresh local state
+    updateMockEnquiry(id, { status: "sop_matched", escalation_reason: null }).then(() => {
+      fetchEnquiries().then(setEnquiries);
+    });
   };
 
   if (loading) {

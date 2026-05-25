@@ -1,26 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback } from "react";
 import { FlatList, Text, View, ActivityIndicator, TouchableOpacity } from "react-native";
-import { useRouter, Stack } from "expo-router";
+import { useRouter, Stack, useFocusEffect } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
-import { fetchEnquiries } from "../../services/api";
+import { fetchEnquiries, updateMockEnquiry } from "../../services/api";
 import { getChannelBadgeStyle, formatDateTime } from "../../constants/status";
 import EmptyState from "../../components/EmptyState";
 
 export default function FollowUpsScreen() {
   const router = useRouter();
   const [enquiries, setEnquiries] = useState([]);
-  const [completedTaskIds, setCompletedTaskIds] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchEnquiries()
-      .then(setEnquiries)
-      .finally(() => setLoading(false));
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchEnquiries()
+        .then(setEnquiries)
+        .finally(() => setLoading(false));
+    }, [])
+  );
 
   const handleMarkDone = (id) => {
-    setCompletedTaskIds((prev) => [...prev, id]);
+    updateMockEnquiry(id, { followup_completed: true }).then(() => {
+      fetchEnquiries().then(setEnquiries);
+    });
   };
 
   if (loading) {
@@ -38,7 +41,7 @@ export default function FollowUpsScreen() {
     .map((e) => {
       const creationTime = new Date(e.created_at).getTime();
       const dueTime = new Date(creationTime + 2 * 60 * 60 * 1000).toISOString();
-      const isDone = completedTaskIds.includes(e.id);
+      const isDone = !!e.followup_completed;
       return {
         id: e.id,
         customer_name: e.customer_name,

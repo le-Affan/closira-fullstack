@@ -72,3 +72,21 @@ export async function scheduleFollowUp(id, { delay_minutes, message_template }) 
     done: false,
   };
 }
+
+/**
+ * Mutates the in-memory mock enquiries array for real-time dashboard simulations.
+ */
+export async function addMockEnquiry(enquiry) {
+  MOCK_ENQUIRIES.unshift(enquiry);
+  return enquiry;
+}
+
+export async function updateMockEnquiry(id, updates) {
+  const index = MOCK_ENQUIRIES.findIndex(e => e.id === id);
+  if (index !== -1) {
+    MOCK_ENQUIRIES[index] = { ...MOCK_ENQUIRIES[index], ...updates };
+    return MOCK_ENQUIRIES[index];
+  }
+  throw new Error(`Enquiry not found: ${id}`);
+}
+

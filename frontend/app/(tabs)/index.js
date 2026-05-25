@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback } from "react";
 import { ScrollView, Text, View, ActivityIndicator, TouchableOpacity } from "react-native";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useRouter, useFocusEffect } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
-import { fetchEnquiries } from "../../services/api";
+import { fetchEnquiries, addMockEnquiry } from "../../services/api";
 import { getChannelBadgeStyle, formatDateTime } from "../../constants/status";
 import SectionHeader from "../../components/SectionHeader";
 
@@ -12,14 +12,11 @@ export default function DashboardScreen() {
   const [enquiries, setEnquiries] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Quick action state triggers
-  const [triggerCount, setTriggerCount] = useState(0);
-
-  useEffect(() => {
-    fetchEnquiries()
-      .then(setEnquiries)
-      .finally(() => setLoading(false));
-  }, [triggerCount]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchEnquiries().then(setEnquiries).finally(() => setLoading(false));
+    }, [])
+  );
 
   if (loading) {
     return (
@@ -58,48 +55,102 @@ export default function DashboardScreen() {
     .slice(0, 8); // show top 8 activities
 
   const handleSimulateLead = () => {
+    const names = ["Liam Carter", "Olivia Vance", "Ethan Hunt", "Sofia Martinez", "Noah Patel", "Emma Stone"];
+    const channels = ["whatsapp", "email", "call"];
+    const messagesByChannel = {
+      whatsapp: [
+        "Hi! Do you have pricing for the premium gold package?",
+        "Hey there, just following up on my booking request.",
+        "Hello, is there any availability for tomorrow afternoon?"
+      ],
+      email: [
+        "Inquiry regarding business hours and consult packages.",
+        "Requesting pricing plans for enterprise subscriptions.",
+        "Could you send over the custom quote template?"
+      ],
+      call: [
+        "Missed callback request regarding onboarding scheduling.",
+        "Inbound call log: customer inquiring about office address.",
+        "Callback requested regarding cleaning packages."
+      ]
+    };
+    const sops = ["Pricing Inquiry", "Booking Request", "General Consultation"];
+
+    const randomName = names[Math.floor(Math.random() * names.length)];
+    const randomChannel = channels[Math.floor(Math.random() * channels.length)];
+    const channelMsgs = messagesByChannel[randomChannel];
+    const randomMsg = channelMsgs[Math.floor(Math.random() * channelMsgs.length)];
+    
+    const isQualified = Math.random() > 0.4;
+    const status = isQualified ? "sop_matched" : "new";
+    const sop_match = isQualified ? sops[Math.floor(Math.random() * sops.length)] : null;
+    const suggested_response = isQualified 
+      ? `Thank you for reaching out. We can help with your ${sop_match?.toLowerCase()}. Let us know your details.`
+      : null;
+
     const newLead = {
-      id: `simulated-${Date.now()}`,
-      customer_name: "Simulated Client",
-      channel: "whatsapp",
-      status: "new",
+      id: `simulated-lead-${Date.now()}`,
+      customer_name: randomName,
+      channel: randomChannel,
+      status,
+      sop_match,
+      suggested_response,
+      escalation_reason: null,
       created_at: new Date().toISOString(),
       messages: [
         {
-          id: `sim-msg-${Date.now()}`,
+          id: `sim-msg-${Date.now()}-a`,
           sender: "customer",
-          content: "Hello! This is a simulated inbound WhatsApp lead request.",
+          content: randomMsg,
           timestamp: new Date().toISOString(),
         }
       ],
       timeline: [
         {
-          status: "new",
-          note: "Simulated lead created",
+          status: "queued",
+          note: "Enquiry received",
           timestamp: new Date().toISOString(),
-        }
+        },
+        ...(isQualified ? [{
+          status: "sop_matched",
+          note: `Auto-qualified: SOP matched (${sop_match})`,
+          timestamp: new Date().toISOString(),
+        }] : [])
       ]
     };
-    // Import dynamically to avoid loading issues and prepend to shared mock array
-    import("../../mocks/enquiries").then(({ MOCK_ENQUIRIES }) => {
-      MOCK_ENQUIRIES.unshift(newLead);
-      setTriggerCount(prev => prev + 1);
+
+    addMockEnquiry(newLead).then(() => {
+      fetchEnquiries().then(setEnquiries);
     });
   };
 
   const handleSimulateEscalation = () => {
+    const names = ["Marcus Sterling", "Nadia Petrova", "Derrick Jones", "Yuki Tanaka"];
+    const reasons = [
+      "Customer is requesting immediate callback regarding contract discrepancy.",
+      "Billing dispute: double charged on premium invoice.",
+      "Agent review requested: customer expressing extreme frustration with delayed delivery."
+    ];
+    const channels = ["whatsapp", "email", "call"];
+
+    const randomName = names[Math.floor(Math.random() * names.length)];
+    const randomReason = reasons[Math.floor(Math.random() * reasons.length)];
+    const randomChannel = channels[Math.floor(Math.random() * channels.length)];
+
     const newEsc = {
       id: `simulated-esc-${Date.now()}`,
-      customer_name: "Simulated Urgent Case",
-      channel: "email",
+      customer_name: randomName,
+      channel: randomChannel,
       status: "escalated",
-      escalation_reason: "Billing Dispute: Double charged on subscription fee.",
+      sop_match: null,
+      suggested_response: null,
+      escalation_reason: randomReason,
       created_at: new Date().toISOString(),
       messages: [
         {
-          id: `sim-msg-esc-${Date.now()}`,
+          id: `sim-msg-${Date.now()}-a`,
           sender: "customer",
-          content: "URGENT: I was double charged and need immediate resolution.",
+          content: "URGENT: I need someone to resolve my billing discrepancy immediately. I cannot wait any longer.",
           timestamp: new Date().toISOString(),
         }
       ],
@@ -111,14 +162,14 @@ export default function DashboardScreen() {
         },
         {
           status: "escalated",
-          note: "Auto-escalated: Billing issue detected",
+          note: `Auto-escalated: ${randomReason}`,
           timestamp: new Date().toISOString(),
         }
       ]
     };
-    import("../../mocks/enquiries").then(({ MOCK_ENQUIRIES }) => {
-      MOCK_ENQUIRIES.unshift(newEsc);
-      setTriggerCount(prev => prev + 1);
+
+    addMockEnquiry(newEsc).then(() => {
+      fetchEnquiries().then(setEnquiries);
     });
   };
 
