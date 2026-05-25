@@ -118,3 +118,33 @@ def test_get_history_not_found():
     res = client.get("/enquiry/nonexistent-id/history")
 
     assert res.status_code == 404
+
+
+def test_schedule_followup():
+    res = create_sample_enquiry()
+
+    job_id = res.json()["job_id"]
+
+    followup = client.post(
+        f"/enquiry/{job_id}/followup",
+        json={
+            "delay_minutes": 30,
+            "message_template": "Hi {name}, following up!",
+        },
+    )
+
+    assert followup.status_code == 201
+
+    data = followup.json()
+
+    assert data["enquiry_id"] == job_id
+    assert data["done"] is False
+
+
+def test_followup_not_found():
+    res = client.post(
+        "/enquiry/bad-id/followup",
+        json={"delay_minutes": 10},
+    )
+
+    assert res.status_code == 404
