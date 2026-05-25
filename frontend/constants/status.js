@@ -65,3 +65,20 @@ export const CHANNEL_LABELS = {
 export function getChannelLabel(channel) {
   return CHANNEL_LABELS[channel] ?? channel;
 }
+
+/**
+ * Format ISO datetime strings into consistent, readable operational support logs.
+ * Example: "May 25, 06:10"
+ */
+export function formatDateTime(isoString) {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+}
+
